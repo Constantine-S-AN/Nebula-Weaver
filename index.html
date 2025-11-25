@@ -1,195 +1,431 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Nebula Weaver</title>
-  <style>
-    :root {
-      --bg: radial-gradient(circle at 20% 20%, #1b2a4a, #0b1020 55%), radial-gradient(circle at 80% 10%, #1f3d5c, transparent 50%), #05060e;
-      --grid: rgba(255, 255, 255, 0.04);
-      --text: #e9ecf5;
-      --muted: rgba(233, 236, 245, 0.72);
-      --accent: #7dd3fc;
-      --accent-2: #c084fc;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--text);
-      font-family: "Space Grotesk", "Segoe UI", system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      padding: 32px;
-      position: relative;
-    }
-    .grid {
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(var(--grid) 1px, transparent 1px),
-        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-      background-size: 32px 32px;
-      opacity: 0.4;
-      mask-image: radial-gradient(circle at 50% 50%, rgba(0,0,0,0.9), transparent 70%);
-      pointer-events: none;
-    }
-    .orb {
-      position: absolute;
-      width: 28vmin;
-      height: 28vmin;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(125, 211, 252, 0.6), rgba(192, 132, 252, 0));
-      filter: blur(18px);
-      animation: drift 14s ease-in-out infinite alternate;
-      mix-blend-mode: screen;
-    }
-    .orb.alt {
-      width: 34vmin;
-      height: 34vmin;
-      background: radial-gradient(circle, rgba(192, 132, 252, 0.55), rgba(125, 211, 252, 0));
-      animation-duration: 18s;
-      animation-delay: -6s;
-      top: 10%;
-      right: 6%;
-    }
-    .card {
-      position: relative;
-      width: min(760px, 100%);
-      padding: 32px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 18px;
-      background: rgba(5, 6, 14, 0.72);
-      backdrop-filter: blur(8px);
-      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.55);
-      overflow: hidden;
-    }
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--muted);
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: linear-gradient(120deg, var(--accent), var(--accent-2));
-      box-shadow: 0 0 10px rgba(125, 211, 252, 0.7);
-    }
-    h1 {
-      margin: 14px 0 10px;
-      font-size: clamp(2.2rem, 4vw, 2.8rem);
-      letter-spacing: -0.02em;
-    }
-    .lede {
-      margin: 0 0 16px;
-      font-size: 1.05rem;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-    .grid-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin: 18px 0 8px;
-    }
-    .item {
-      padding: 12px 14px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.03);
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-    .item strong {
-      display: block;
-      color: var(--text);
-      font-size: 1rem;
-    }
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 14px;
-    }
-    a.button {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      text-decoration: none;
-      padding: 11px 16px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--text);
-      transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-    a.button.primary {
-      border-color: rgba(125, 211, 252, 0.7);
-      box-shadow: 0 12px 30px rgba(125, 211, 252, 0.2);
-    }
-    a.button:hover {
-      transform: translateY(-1px);
-      border-color: rgba(255, 255, 255, 0.35);
-      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
-    }
-    a.button.primary:hover {
-      box-shadow: 0 14px 36px rgba(125, 211, 252, 0.3);
-    }
-    .note {
-      margin-top: 10px;
-      font-size: 0.9rem;
-      color: rgba(233, 236, 245, 0.65);
-    }
-    @keyframes drift {
-      from { transform: translate(-8%, -6%) scale(1); }
-      to { transform: translate(6%, 4%) scale(1.08); }
-    }
-    @media (max-width: 640px) {
-      .card { padding: 22px; }
-      body { padding: 18px; }
-      h1 { font-size: 2rem; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>星云织梦 | Nebula Weaver</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        #ui-layer {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            transition: opacity 0.5s;
+        }
+        h1 {
+            font-weight: 200;
+            letter-spacing: 5px;
+            font-size: 24px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        p {
+            font-size: 14px;
+            font-weight: 300;
+            opacity: 0.7;
+        }
+        .instruction {
+            font-size: 12px;
+            color: #00ffff;
+            margin-top: 5px;
+            line-height: 1.6;
+        }
+        #loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            z-index: 20;
+            font-size: 16px;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+        #error-msg {
+            display: none;
+            color: #ff5555;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        /* 语言切换按钮样式 */
+        #lang-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 20;
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 5px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(4px);
+            transition: all 0.3s;
+            font-weight: bold;
+            border-radius: 15px;
+        }
+        #lang-btn:hover {
+            color: #fff;
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+    </style>
 </head>
 <body>
-  <div class="grid" aria-hidden="true"></div>
-  <div class="orb" aria-hidden="true" style="top: 22%; left: 10%;"></div>
-  <div class="orb alt" aria-hidden="true"></div>
-  <div class="card">
-    <div class="pill">
-      <span class="dot"></span>
-      Nebula Weaver · Coming Online
+
+    <div id="loader">
+        <div>系统初始化中...</div>
+        <div id="error-msg">Three.js 加载失败，请检查网络</div>
     </div>
-    <h1>Crafting luminous nebulae in the browser.</h1>
-    <p class="lede">
-      This repository will host an interactive WebGL playground for painting, warping, and animating nebular fields.
-      Shader-driven layers, particle fog, and responsive controls will land here soon.
-    </p>
-    <div class="grid-list">
-      <div class="item"><strong>Focus</strong>Generative nebula shader experiments</div>
-      <div class="item"><strong>Tech</strong>Three.js · GLSL · Postprocessing</div>
-      <div class="item"><strong>Status</strong>Scaffolding ready · Features incoming</div>
-      <div class="item"><strong>Try</strong>Open locally or deploy on GitHub Pages</div>
+
+    <!-- 语言切换按钮 -->
+    <div id="lang-btn" onclick="toggleLanguage()">EN</div>
+
+    <div id="ui-layer">
+        <h1 id="ui-title">星云织梦</h1>
+        <p id="ui-subtitle">Nebula Weaver</p>
+        <div class="instruction" id="ui-instruction">
+            移动鼠标/手指引导星流 <br> 
+            点击/长按触发超新星爆发
+        </div>
     </div>
-    <div class="actions">
-      <a class="button primary" href="index.html">Open Placeholder</a>
-      <a class="button" href="https://github.com/Constantine-S-AN/Nebula-Weaver" target="_blank" rel="noopener">View Repository</a>
-    </div>
-    <div class="note">
-      Quick preview: open this file directly in a browser, or run <code>python3 -m http.server 8000</code> in this folder and visit <code>http://localhost:8000</code>.
-    </div>
-  </div>
+
+    <div id="canvas-container"></div>
+
+    <!-- 引入 Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        /**
+         * 版本说明：V2 经典版 + 双语支持
+         * 特性：
+         * - 15,000 粒子
+         * - 适中的爆发力 (explodeForce: 6.0)
+         * - 简单的吸引/排斥物理逻辑
+         */
+
+        // --- 双语逻辑开始 ---
+        const LANGUAGES = {
+            'zh': {
+                title: "星云织梦",
+                subtitle: "Nebula Weaver",
+                instruction: "移动鼠标/手指引导星流 <br> 点击/长按触发超新星爆发",
+                btnText: "EN"
+            },
+            'en': {
+                title: "Nebula Weaver",
+                subtitle: "Interactive Starfield",
+                instruction: "Move cursor/touch to guide the stream <br> Click/Hold to trigger Supernova",
+                btnText: "中"
+            }
+        };
+
+        let currentLang = 'zh';
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            updateUI();
+        }
+
+        function updateUI() {
+            const texts = LANGUAGES[currentLang];
+            document.getElementById('ui-title').innerText = texts.title;
+            document.getElementById('ui-subtitle').innerText = texts.subtitle;
+            document.getElementById('ui-instruction').innerHTML = texts.instruction;
+            document.getElementById('lang-btn').innerText = texts.btnText;
+        }
+        // --- 双语逻辑结束 ---
+
+        let scene, camera, renderer;
+        let particles, geometry, material;
+        let positions, velocities, colors, sizes;
+        let clock;
+        
+        // V2 版本的配置参数 (保持完全一致)
+        const CONFIG = {
+            particleCount: 15000, 
+            particleSize: 4.5,    
+            attractionRadius: 300,
+            attractionForce: 0.1, 
+            drag: 0.95, 
+            explodeForce: 6.0,  
+            baseColor: new THREE.Color(0x0066ff),
+            highEnergyColor: new THREE.Color(0xffaa00)
+        };
+
+        const mouse = new THREE.Vector2(0, 0); 
+        const target = new THREE.Vector3();
+        let isMouseDown = false;
+        let windowHalfX = window.innerWidth / 2;
+        let windowHalfY = window.innerHeight / 2;
+
+        if (typeof THREE === 'undefined') {
+            document.getElementById('error-msg').style.display = 'block';
+            document.getElementById('loader').innerText = "加载失败：无法连接到 Three.js 库";
+        } else {
+            init();
+            animate();
+        }
+
+        function init() {
+            const container = document.getElementById('canvas-container');
+            document.getElementById('loader').style.display = 'none';
+
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x000000, 0.0008);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 4000);
+            camera.position.z = 800; 
+
+            renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000);
+            container.appendChild(renderer.domElement);
+
+            clock = new THREE.Clock();
+
+            createParticles();
+
+            // 防止点击UI层级穿透
+            document.addEventListener('mousemove', onDocumentMouseMove, false);
+            document.addEventListener('touchstart', onDocumentTouchStart, { passive: false });
+            document.addEventListener('touchmove', onDocumentTouchMove, { passive: false });
+            document.addEventListener('touchend', onDocumentTouchEnd, false);
+            document.addEventListener('mousedown', onMouseDown, false);
+            document.addEventListener('mouseup', () => isMouseDown = false, false);
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        function getSpriteTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const context = canvas.getContext('2d');
+            
+            const gradient = context.createRadialGradient(16, 16, 0, 16, 16, 16);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            gradient.addColorStop(0.2, 'rgba(230, 240, 255, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(0, 100, 255, 0.2)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, 32, 32);
+
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function createParticles() {
+            geometry = new THREE.BufferGeometry();
+            
+            positions = new Float32Array(CONFIG.particleCount * 3);
+            velocities = []; 
+            colors = new Float32Array(CONFIG.particleCount * 3);
+            sizes = new Float32Array(CONFIG.particleCount);
+
+            const color = new THREE.Color();
+
+            for (let i = 0; i < CONFIG.particleCount; i++) {
+                const r = Math.random() * 1200; 
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos((Math.random() * 2) - 1);
+
+                const x = r * Math.sin(phi) * Math.cos(theta);
+                const y = r * Math.sin(phi) * Math.sin(theta);
+                const z = r * Math.cos(phi);
+
+                positions[i * 3] = x;
+                positions[i * 3 + 1] = y;
+                positions[i * 3 + 2] = z;
+
+                velocities.push({
+                    x: (Math.random() - 0.5) * 2,
+                    y: (Math.random() - 0.5) * 2,
+                    z: (Math.random() - 0.5) * 2
+                });
+
+                color.setHSL(0.55 + Math.random() * 0.1, 0.8, 0.5);
+                colors[i * 3] = color.r;
+                colors[i * 3 + 1] = color.g;
+                colors[i * 3 + 2] = color.b;
+
+                sizes[i] = CONFIG.particleSize * (0.5 + Math.random() * 1.5);
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+            material = new THREE.PointsMaterial({
+                size: CONFIG.particleSize,
+                map: getSpriteTexture(),
+                blending: THREE.AdditiveBlending,
+                depthTest: false,
+                transparent: true,
+                opacity: 0.9,
+                vertexColors: true
+            });
+
+            particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+        }
+
+        function onWindowResize() {
+            windowHalfX = window.innerWidth / 2;
+            windowHalfY = window.innerHeight / 2;
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function onDocumentMouseMove(event) {
+            mouse.x = (event.clientX - windowHalfX);
+            mouse.y = -(event.clientY - windowHalfY);
+        }
+
+        function onMouseDown(event) {
+            // 防止点击按钮时触发爆发
+            if (event.target.id === 'lang-btn') return;
+            isMouseDown = true;
+        }
+
+        function onDocumentTouchStart(event) {
+            // 防止点击按钮时触发爆发
+            if (event.target.id === 'lang-btn') return;
+
+            if (event.touches.length === 1) {
+                event.preventDefault();
+                mouse.x = event.touches[0].pageX - windowHalfX;
+                mouse.y = -(event.touches[0].pageY - windowHalfY);
+                isMouseDown = true;
+            }
+        }
+
+        function onDocumentTouchMove(event) {
+            if (event.touches.length === 1) {
+                event.preventDefault();
+                mouse.x = event.touches[0].pageX - windowHalfX;
+                mouse.y = -(event.touches[0].pageY - windowHalfY);
+            }
+        }
+
+        function onDocumentTouchEnd() {
+            isMouseDown = false;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            render();
+        }
+
+        function render() {
+            const time = clock.getElapsedTime();
+            camera.position.x = Math.sin(time * 0.05) * 200;
+            camera.position.y = Math.cos(time * 0.05) * 200;
+            camera.lookAt(scene.position);
+
+            updateParticles();
+            renderer.render(scene, camera);
+        }
+
+        function updateParticles() {
+            const positions = geometry.attributes.position.array;
+            const colors = geometry.attributes.color.array;
+
+            target.set(mouse.x, mouse.y, 50); 
+
+            const time = clock.getElapsedTime();
+
+            for (let i = 0; i < CONFIG.particleCount; i++) {
+                const px = positions[i * 3];
+                const py = positions[i * 3 + 1];
+                const pz = positions[i * 3 + 2];
+
+                const v = velocities[i];
+
+                const dx = target.x - px;
+                const dy = target.y - py;
+                const dz = target.z - pz;
+                
+                const distSq = dx*dx + dy*dy + dz*dz;
+                let force = 0;
+
+                if (isMouseDown) {
+                    if (distSq < 200000) {
+                        force = -CONFIG.explodeForce * Math.random(); 
+                    }
+                } else {
+                    if (distSq < 1500000) {
+                        force = CONFIG.attractionForce * (1200 / (Math.sqrt(distSq) + 1));
+                    }
+                    v.x += -dy * 0.0003;
+                    v.y += dx * 0.0003;
+                }
+
+                if (force !== 0) {
+                    const angle = Math.atan2(dy, dx);
+                    v.x += Math.cos(angle) * force;
+                    v.y += Math.sin(angle) * force;
+                    v.z += (target.z - pz) * 0.0015;
+                }
+
+                v.x += Math.sin(time + py * 0.01) * 0.02;
+                v.y += Math.cos(time + px * 0.01) * 0.02;
+                v.z += Math.sin(time + px * 0.01 + py * 0.01) * 0.02;
+
+                const homeDistSq = px*px + py*py + pz*pz;
+                if (homeDistSq > 2500000) {
+                    v.x -= px * 0.0002;
+                    v.y -= py * 0.0002;
+                    v.z -= pz * 0.0002;
+                }
+
+                v.x *= CONFIG.drag;
+                v.y *= CONFIG.drag;
+                v.z *= CONFIG.drag;
+
+                positions[i * 3]     += v.x;
+                positions[i * 3 + 1] += v.y;
+                positions[i * 3 + 2] += v.z;
+
+                const speed = Math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+                let t = Math.min(speed / 4.0, 1.0); 
+                
+                const r = CONFIG.baseColor.r + (CONFIG.highEnergyColor.r - CONFIG.baseColor.r) * t;
+                const g = CONFIG.baseColor.g + (CONFIG.highEnergyColor.g - CONFIG.baseColor.g) * t;
+                const b = CONFIG.baseColor.b + (CONFIG.highEnergyColor.b - CONFIG.baseColor.b) * t;
+
+                colors[i * 3]     = r;
+                colors[i * 3 + 1] = g;
+                colors[i * 3 + 2] = b;
+            }
+
+            geometry.attributes.position.needsUpdate = true;
+            geometry.attributes.color.needsUpdate = true;
+        }
+    </script>
 </body>
 </html>
