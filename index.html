@@ -73,7 +73,7 @@
             position: absolute;
             top: 20px;
             right: 20px;
-            z-index: 20;
+            z-index: 30; /* 提高层级 */
             color: rgba(255, 255, 255, 0.7);
             border: 1px solid rgba(255, 255, 255, 0.3);
             padding: 5px 12px;
@@ -92,23 +92,74 @@
             background: rgba(255, 255, 255, 0.2);
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
         }
+        
+        /* 重力感应开关按钮 (移至左上角，样式优化) */
+        #enable-gyro-btn {
+            position: absolute;
+            top: 20px; 
+            left: 20px;
+            z-index: 30;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.6);
+            padding: 6px 12px;
+            font-size: 11px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: monospace;
+            backdrop-filter: blur(4px);
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+        #enable-gyro-btn:hover {
+            border-color: #fff;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        /* 激活状态 */
+        #enable-gyro-btn.active {
+            border-color: #00ff00;
+            color: #00ff00;
+            background: rgba(0, 255, 0, 0.1);
+            box-shadow: 0 0 8px rgba(0, 255, 0, 0.2);
+        }
+        #https-warning {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(200, 0, 0, 0.8);
+            color: white;
+            font-size: 12px;
+            text-align: center;
+            padding: 5px;
+            z-index: 100;
+            display: none;
+        }
     </style>
 </head>
 <body>
+
+    <div id="https-warning">⚠️ 陀螺仪功能需要 HTTPS 环境支持 / Gyroscope requires HTTPS</div>
 
     <div id="loader">
         <div>系统初始化中...</div>
         <div id="error-msg">Three.js 加载失败，请检查网络</div>
     </div>
 
-    <!-- 语言切换按钮 -->
+    <!-- 左上角的重力开关 -->
+    <button id="enable-gyro-btn" onclick="toggleGyro()">GYRO: OFF</button>
+
+    <!-- 右上角的语言切换 -->
     <div id="lang-btn" onclick="toggleLanguage()">EN</div>
 
     <div id="ui-layer">
         <h1 id="ui-title">星云织梦</h1>
         <p id="ui-subtitle">Nebula Weaver</p>
         <div class="instruction" id="ui-instruction">
-            移动鼠标/手指引导星流 <br> 
+            移动鼠标/倾斜手机引导星流 <br> 
             点击/长按触发超新星爆发
         </div>
     </div>
@@ -120,26 +171,33 @@
 
     <script>
         /**
-         * 版本说明：V2 经典版 + 双语支持
-         * 特性：
-         * - 15,000 粒子
-         * - 适中的爆发力 (explodeForce: 6.0)
-         * - 简单的吸引/排斥物理逻辑
+         * 版本说明：V2 经典版 + 双语 + 左上角重力开关
          */
 
-        // --- 双语逻辑开始 ---
+        // --- HTTPS 检查 ---
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            document.getElementById('https-warning').style.display = 'block';
+        }
+
+        // --- 双语逻辑 ---
         const LANGUAGES = {
             'zh': {
                 title: "星云织梦",
                 subtitle: "Nebula Weaver",
-                instruction: "移动鼠标/手指引导星流 <br> 点击/长按触发超新星爆发",
-                btnText: "EN"
+                instruction: "移动鼠标/倾斜手机引导星流 <br> 点击/长按触发超新星爆发",
+                btnText: "EN",
+                gyroOn: "重力: 开",
+                gyroOff: "重力: 关",
+                gyroDenied: "权限拒绝"
             },
             'en': {
                 title: "Nebula Weaver",
                 subtitle: "Interactive Starfield",
-                instruction: "Move cursor/touch to guide the stream <br> Click/Hold to trigger Supernova",
-                btnText: "中"
+                instruction: "Tilt device/Move cursor to guide stream <br> Click/Hold to trigger Supernova",
+                btnText: "中",
+                gyroOn: "GYRO: ON",
+                gyroOff: "GYRO: OFF",
+                gyroDenied: "GYRO: DENIED"
             }
         };
 
@@ -156,28 +214,43 @@
             document.getElementById('ui-subtitle').innerText = texts.subtitle;
             document.getElementById('ui-instruction').innerHTML = texts.instruction;
             document.getElementById('lang-btn').innerText = texts.btnText;
+            
+            // 更新开关按钮的文本 (保持状态)
+            const btn = document.getElementById('enable-gyro-btn');
+            if (gyroEnabled) {
+                btn.innerText = texts.gyroOn;
+            } else {
+                btn.innerText = texts.gyroOff;
+            }
         }
-        // --- 双语逻辑结束 ---
-
+        
+        // --- 变量定义 ---
         let scene, camera, renderer;
         let particles, geometry, material;
         let positions, velocities, colors, sizes;
         let clock;
         
-        // V2 版本的配置参数 (保持完全一致)
+        // 陀螺仪变量
+        let tiltX = 0;
+        let tiltY = 0;
+        let gyroEnabled = false; // 开关状态
+        let gyroPermissionGranted = false; // 权限状态
+        
         const CONFIG = {
             particleCount: 15000, 
             particleSize: 4.5,    
             attractionRadius: 300,
             attractionForce: 0.1, 
+            tiltForce: 0.15, 
             drag: 0.95, 
             explodeForce: 6.0,  
             baseColor: new THREE.Color(0x0066ff),
-            highEnergyColor: new THREE.Color(0xffaa00)
+            highEnergyColor: new THREE.Color(0xffaa00),
+            gyroMoveSpeed: 15
         };
 
-        const mouse = new THREE.Vector2(0, 0); 
-        const target = new THREE.Vector3();
+        // 移除 mouse 变量，直接使用 target 作为核心位置
+        const target = new THREE.Vector3(0, 0, 50); // 初始化在中心
         let isMouseDown = false;
         let windowHalfX = window.innerWidth / 2;
         let windowHalfY = window.innerHeight / 2;
@@ -210,15 +283,99 @@
 
             createParticles();
 
-            // 防止点击UI层级穿透
+            // 事件监听
             document.addEventListener('mousemove', onDocumentMouseMove, false);
-            document.addEventListener('touchstart', onDocumentTouchStart, { passive: false });
+            document.addEventListener('touchstart', onTouchStart, { passive: false });
             document.addEventListener('touchmove', onDocumentTouchMove, { passive: false });
             document.addEventListener('touchend', onDocumentTouchEnd, false);
             document.addEventListener('mousedown', onMouseDown, false);
             document.addEventListener('mouseup', () => isMouseDown = false, false);
+            
             window.addEventListener('resize', onWindowResize, false);
         }
+
+        // --- 陀螺仪控制逻辑 (开关) ---
+
+        window.toggleGyro = function() {
+            const btn = document.getElementById('enable-gyro-btn');
+            const texts = LANGUAGES[currentLang];
+
+            if (gyroEnabled) {
+                // 关闭逻辑
+                gyroEnabled = false;
+                btn.classList.remove('active');
+                btn.innerText = texts.gyroOff;
+                // 注意：我们通常不移除事件监听器，只是忽略数据，这样再次开启响应更快
+            } else {
+                // 开启逻辑
+                if (!gyroPermissionGranted && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    // iOS 需要请求权限
+                    DeviceOrientationEvent.requestPermission()
+                        .then(response => {
+                            if (response === 'granted') {
+                                gyroPermissionGranted = true;
+                                enableGyroLogic(btn, texts);
+                            } else {
+                                btn.innerText = texts.gyroDenied;
+                            }
+                        })
+                        .catch(console.error);
+                } else {
+                    // 非 iOS 或已获得权限，直接开启
+                    enableGyroLogic(btn, texts);
+                }
+            }
+        };
+
+        function enableGyroLogic(btn, texts) {
+            gyroEnabled = true;
+            btn.classList.add('active');
+            btn.innerText = texts.gyroOn;
+            
+            // 确保监听器存在
+            window.addEventListener('deviceorientation', handleOrientation);
+        }
+
+        function handleOrientation(event) {
+            if (event.gamma !== null && event.beta !== null) {
+                const maxAngle = 45;
+                let gx = event.gamma;
+                let gy = event.beta;
+                
+                // 简单的钳制
+                if (gx > maxAngle) gx = maxAngle;
+                if (gx < -maxAngle) gx = -maxAngle;
+                if (gy > maxAngle) gy = maxAngle;
+                if (gy < -maxAngle) gy = -maxAngle;
+
+                // 归一化到 -1 ~ 1
+                tiltX = gx / maxAngle;
+                tiltY = -gy / maxAngle; 
+            }
+        }
+
+
+        // --- 交互处理 ---
+
+        function onMouseDown(event) {
+            if (event.target.id === 'lang-btn' || event.target.id === 'enable-gyro-btn') return;
+            isMouseDown = true;
+            target.x = event.clientX - windowHalfX;
+            target.y = -(event.clientY - windowHalfY);
+        }
+
+        function onTouchStart(event) {
+            if (event.target.id === 'lang-btn' || event.target.id === 'enable-gyro-btn') return;
+
+            if (event.touches.length === 1) {
+                event.preventDefault();
+                target.x = event.touches[0].pageX - windowHalfX;
+                target.y = -(event.touches[0].pageY - windowHalfY);
+                isMouseDown = true;
+            }
+        }
+
+        // --- 渲染与物理 ---
 
         function getSpriteTexture() {
             const canvas = document.createElement('canvas');
@@ -302,33 +459,15 @@
         }
 
         function onDocumentMouseMove(event) {
-            mouse.x = (event.clientX - windowHalfX);
-            mouse.y = -(event.clientY - windowHalfY);
-        }
-
-        function onMouseDown(event) {
-            // 防止点击按钮时触发爆发
-            if (event.target.id === 'lang-btn') return;
-            isMouseDown = true;
-        }
-
-        function onDocumentTouchStart(event) {
-            // 防止点击按钮时触发爆发
-            if (event.target.id === 'lang-btn') return;
-
-            if (event.touches.length === 1) {
-                event.preventDefault();
-                mouse.x = event.touches[0].pageX - windowHalfX;
-                mouse.y = -(event.touches[0].pageY - windowHalfY);
-                isMouseDown = true;
-            }
+            target.x = (event.clientX - windowHalfX);
+            target.y = -(event.clientY - windowHalfY);
         }
 
         function onDocumentTouchMove(event) {
             if (event.touches.length === 1) {
                 event.preventDefault();
-                mouse.x = event.touches[0].pageX - windowHalfX;
-                mouse.y = -(event.touches[0].pageY - windowHalfY);
+                target.x = event.touches[0].pageX - windowHalfX;
+                target.y = -(event.touches[0].pageY - windowHalfY);
             }
         }
 
@@ -355,9 +494,15 @@
             const positions = geometry.attributes.position.array;
             const colors = geometry.attributes.color.array;
 
-            target.set(mouse.x, mouse.y, 50); 
-
             const time = clock.getElapsedTime();
+
+            // --- 陀螺仪移动逻辑 ---
+            if (gyroEnabled) {
+                target.x += tiltX * CONFIG.gyroMoveSpeed;
+                target.y += tiltY * CONFIG.gyroMoveSpeed;
+                target.x = Math.max(-windowHalfX, Math.min(windowHalfX, target.x));
+                target.y = Math.max(-windowHalfY, Math.min(windowHalfY, target.y));
+            }
 
             for (let i = 0; i < CONFIG.particleCount; i++) {
                 const px = positions[i * 3];
@@ -381,6 +526,7 @@
                     if (distSq < 1500000) {
                         force = CONFIG.attractionForce * (1200 / (Math.sqrt(distSq) + 1));
                     }
+                    // 仅保留轻微的旋转力
                     v.x += -dy * 0.0003;
                     v.y += dx * 0.0003;
                 }
