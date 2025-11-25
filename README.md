@@ -5,23 +5,24 @@
 Interactive WebGL starfield/nebula experience with bilingual UI, supernova bursts, and cursor-guided particle flow—all in a single HTML file.
 
 ## Features
-- 15,000 animated particles with attraction/repulsion and color-by-velocity.
-- Click/hold to trigger supernova bursts; move cursor/touch to steer the flow.
-- Bilingual interface toggle (中文 / EN) for title, subtitle, and instructions.
-- No build step or external assets beyond CDN Three.js; runs entirely client-side.
+- 15k animated particles with attraction/repulsion and velocity-based color shift.
+- Cursor/touch steering plus click/long-press supernova bursts.
+- Bilingual UI toggle (中文 / EN) for titles and instructions.
+- Pure client-side: CDN Three.js (r128), no build or extra assets.
+- Responsive canvas with fog, radial gradient sprites, and drag-based motion.
 
 ## Controls
-- Move mouse/touch: guide particle stream.
+- Move mouse/touch: guide the particle stream.
 - Click or long-press (away from UI buttons): trigger a supernova-style explosion.
 - Language button (top-right): toggle English/Chinese UI copy.
 
-## Quick Start
+## Run Locally
 1) Clone: `git clone https://github.com/Constantine-S-AN/Nebula-Weaver.git`
-2) Serve locally (recommended):  
-   `cd Nebula-Weaver && python3 -m http.server 8000`
+2) Serve (recommended): `cd Nebula-Weaver && python3 -m http.server 8000`
 3) Open `http://localhost:8000` (or open `index.html` directly for a quick preview).
 
 ## Notes
-- All visuals are in `index.html` (Three.js r128 via CDN); no additional assets required.
-- Works offline after first load of the CDN script if cached by your browser.
-- Tweak particle counts, colors, and forces in `index.html` under the `CONFIG` object.
+- All visuals live in `index.html`; the only external dependency is CDN Three.js.
+- After the first load, your browser cache can keep it working offline.
+- Tweak particle count, colors, and forces via the `CONFIG` object in `index.html`.
+- To adjust performance on low-power devices, lower `particleCount` or `particleSize`.
