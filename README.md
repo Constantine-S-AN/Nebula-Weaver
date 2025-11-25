@@ -21,6 +21,11 @@ Interactive, bilingual WebGL nebula—15k particles with cursor-guided flow and 
 2) Serve (recommended): `cd Nebula-Weaver && python3 -m http.server 8000`
 3) Open `http://localhost:8000` (or double-click `index.html` to preview).
 
+## Mobile
+- Works on modern mobile browsers; touch controls mirror mouse (drag to steer, tap/long-press to burst).
+- For lower-power devices, reduce `particleCount`/`particleSize` in `CONFIG` to keep frame rates smooth.
+- If the CDN is blocked, load once on Wi‑Fi to cache Three.js, then re-open offline.
+
 ## Customize
 - All logic lives in `index.html`; Three.js comes from the CDN.
 - Tune performance in the `CONFIG` object (e.g., `particleCount`, `particleSize`).
