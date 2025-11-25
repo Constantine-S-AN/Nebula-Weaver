@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nebula Weaver</title>
+  <style>
+    :root {
+      --bg: radial-gradient(circle at 20% 20%, #1b2a4a, #0b1020 55%), radial-gradient(circle at 80% 10%, #1f3d5c, transparent 50%), #05060e;
+      --grid: rgba(255, 255, 255, 0.04);
+      --text: #e9ecf5;
+      --muted: rgba(233, 236, 245, 0.72);
+      --accent: #7dd3fc;
+      --accent-2: #c084fc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Space Grotesk", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      padding: 32px;
+      position: relative;
+    }
+    .grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 32px 32px;
+      opacity: 0.4;
+      mask-image: radial-gradient(circle at 50% 50%, rgba(0,0,0,0.9), transparent 70%);
+      pointer-events: none;
+    }
+    .orb {
+      position: absolute;
+      width: 28vmin;
+      height: 28vmin;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(125, 211, 252, 0.6), rgba(192, 132, 252, 0));
+      filter: blur(18px);
+      animation: drift 14s ease-in-out infinite alternate;
+      mix-blend-mode: screen;
+    }
+    .orb.alt {
+      width: 34vmin;
+      height: 34vmin;
+      background: radial-gradient(circle, rgba(192, 132, 252, 0.55), rgba(125, 211, 252, 0));
+      animation-duration: 18s;
+      animation-delay: -6s;
+      top: 10%;
+      right: 6%;
+    }
+    .card {
+      position: relative;
+      width: min(760px, 100%);
+      padding: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      background: rgba(5, 6, 14, 0.72);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.55);
+      overflow: hidden;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(120deg, var(--accent), var(--accent-2));
+      box-shadow: 0 0 10px rgba(125, 211, 252, 0.7);
+    }
+    h1 {
+      margin: 14px 0 10px;
+      font-size: clamp(2.2rem, 4vw, 2.8rem);
+      letter-spacing: -0.02em;
+    }
+    .lede {
+      margin: 0 0 16px;
+      font-size: 1.05rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .grid-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin: 18px 0 8px;
+    }
+    .item {
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .item strong {
+      display: block;
+      color: var(--text);
+      font-size: 1rem;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    a.button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      padding: 11px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    a.button.primary {
+      border-color: rgba(125, 211, 252, 0.7);
+      box-shadow: 0 12px 30px rgba(125, 211, 252, 0.2);
+    }
+    a.button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255, 255, 255, 0.35);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
+    }
+    a.button.primary:hover {
+      box-shadow: 0 14px 36px rgba(125, 211, 252, 0.3);
+    }
+    .note {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: rgba(233, 236, 245, 0.65);
+    }
+    @keyframes drift {
+      from { transform: translate(-8%, -6%) scale(1); }
+      to { transform: translate(6%, 4%) scale(1.08); }
+    }
+    @media (max-width: 640px) {
+      .card { padding: 22px; }
+      body { padding: 18px; }
+      h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid" aria-hidden="true"></div>
+  <div class="orb" aria-hidden="true" style="top: 22%; left: 10%;"></div>
+  <div class="orb alt" aria-hidden="true"></div>
+  <div class="card">
+    <div class="pill">
+      <span class="dot"></span>
+      Nebula Weaver · Coming Online
+    </div>
+    <h1>Crafting luminous nebulae in the browser.</h1>
+    <p class="lede">
+      This repository will host an interactive WebGL playground for painting, warping, and animating nebular fields.
+      Shader-driven layers, particle fog, and responsive controls will land here soon.
+    </p>
+    <div class="grid-list">
+      <div class="item"><strong>Focus</strong>Generative nebula shader experiments</div>
+      <div class="item"><strong>Tech</strong>Three.js · GLSL · Postprocessing</div>
+      <div class="item"><strong>Status</strong>Scaffolding ready · Features incoming</div>
+      <div class="item"><strong>Try</strong>Open locally or deploy on GitHub Pages</div>
+    </div>
+    <div class="actions">
+      <a class="button primary" href="index.html">Open Placeholder</a>
+      <a class="button" href="https://github.com/Constantine-S-AN/Nebula-Weaver" target="_blank" rel="noopener">View Repository</a>
+    </div>
+    <div class="note">
+      Quick preview: open this file directly in a browser, or run <code>python3 -m http.server 8000</code> in this folder and visit <code>http://localhost:8000</code>.
+    </div>
+  </div>
+</body>
+</html>
